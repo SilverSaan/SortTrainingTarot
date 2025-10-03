@@ -103,12 +103,11 @@ export default function Home() {
       while (j >= 0 && arr[j] > key){
         arr[j + 1] = arr[j]
         j = j -1
-        setOrder([...arr])
-        sleep(100)
       }
 
       arr[j+1] = key
       setOrder([...arr])
+      await sleep(300)
     }
 
   }

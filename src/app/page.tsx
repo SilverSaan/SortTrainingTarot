@@ -1,103 +1,238 @@
-import Image from "next/image";
+"use client";
+import Container from "@mui/material/Container";
+import { Title } from "@mui/icons-material";
+import {Card, Box, Button, ButtonGroup, Grid, Paper, Typography, CardContent } from "@mui/material";
+import { SetStateAction, use, useEffect, useState } from "react";
+import { getCardMap } from "@/util/util";
+import axios from "axios";
+import { analyseComplexValue, motion } from "framer-motion";
+import { small } from "framer-motion/client";
+
+
+
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    const [cardMap, setCardMap] = useState<Record<number, string>>({});
+    const [order, setOrder] = useState<number[]>([]); // track drag order
+    const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+    useEffect(() => {
+      axios.get("/api/card")
+        .then(res => {
+          setCardMap(res.data);
+          // initialize order as sorted by card number
+          setOrder(Object.keys(res.data).map(num => parseInt(num, 10)));
+        })
+        .catch(err => console.error("Error loading cards:", err));
+    }, []);
+
+    const handleDragStart = (index: number) => setDraggingIndex(index);
+
+    const handleDragEnter = (index: number) => {
+      if (draggingIndex === null || draggingIndex === index) return;
+      const newOrder = [...order];
+      const temp = newOrder[index];
+      newOrder[index] = newOrder[draggingIndex];
+      newOrder[draggingIndex] = temp;
+      setDraggingIndex(index);
+      setOrder(newOrder);
+    };
+
+  const handleDragEnd = () => setDraggingIndex(null);
+
+  const shuffleCards = () => { 
+    const shuffled = [...order];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    setOrder(shuffled);
+  }
+
+  const sleep = (ms: number | undefined) => new Promise(resolve => setTimeout(resolve, ms));
+
+
+  const bubbleSort = async () => {
+    // To exemplify the animation, each step will be delayed by 300ms
+    const arr = [...order];
+    const n = arr.length;
+    for (let i = 0; i < n - 1; i++) {
+      for (let j = 0; j < n - i - 1; j++) { 
+        
+        if (arr[j] > arr[j + 1]) {
+          arr[j] = arr[j] ^ arr[j + 1];
+          arr[j + 1] = arr[j] ^ arr[j + 1];
+          arr[j] = arr[j] ^ arr[j + 1];
+          setOrder([...arr]);  
+        }
+        await sleep(100);
+
+      }
+    }
+  }
+
+  const selectionSort = async () => {
+    console.log("WOW")
+    const arr = [...order]; 
+    const n = arr.length; 
+
+    for(let i = 0; i < n; i++){
+      let smallest = i
+      for(let j = i; j < n; j++){
+        if (arr[smallest] > arr[j]){
+          smallest = j
+        }
+      }
+      let temp = arr[i]
+      arr[i] = arr[smallest]
+      arr[smallest] = temp 
+      setOrder([...arr])
+      await sleep(100)
+    }
+
+  }
+
+  const insertionSort = async () => {
+    const arr = [...order]
+    const n = arr.length;
+    
+    for(let i = 1; i < n; i++){
+      let key = arr[i]
+      let j = i - 1
+
+      while (j >= 0 && arr[j] > key){
+        arr[j + 1] = arr[j]
+        j = j -1
+        setOrder([...arr])
+        sleep(100)
+      }
+
+      arr[j+1] = key
+      setOrder([...arr])
+    }
+
+  }
+
+  
+
+  const mergeSort = async () => {
+    const arr = [...order];
+    let b: number[] = new Array(arr.length); // Had to allocate this to allow async function to not duplicate
+
+    async function mergeSortRecursiveStep(low: number, mid: number, high: number) {
+      let l1 = low, l2 = mid + 1, i = low;
+
+      // Filling B to allow this to be async.
+      while (l1 <= mid && l2 <= high) {
+        if (arr[l1] < arr[l2]) {
+          b[i++] = arr[l1++];
+        } else {
+          b[i++] = arr[l2++];
+        }
+      }
+      while (l1 <= mid) {
+        b[i++] = arr[l1++];
+      }
+      while (l2 <= high) {
+        b[i++] = arr[l2++];
+      }
+
+      for (let k = low; k <= high; k++) {
+        arr[k] = b[k];
+        
+      }
+    }
+
+    async function sort(low: number, high: number) {
+      if (low < high) {
+        const mid = Math.floor((low + high) / 2);
+        await sort(low, mid);
+        setOrder([...arr]);
+        await sleep(100);
+        await sort(mid + 1, high);
+        setOrder([...arr]);
+        await sleep(100);
+        await mergeSortRecursiveStep(low, mid, high);
+        setOrder([...arr]);
+        await sleep(100);
+      }
+    }
+
+    await sort(0, arr.length - 1);
+  };
+
+
+
+    
+  return (
+      <Box component="main" sx={{ flexGrow: 1, py: 8 }}>
+        <Typography variant="subtitle1" gutterBottom>
+          A simple app to sort tarot cards that I made after failing a interview in bubble sort because of nerves :P (For Study, little to no AI used)
+          - Pedro Silveira 
+        </Typography>
+        <Typography variant="subtitle1" gutterBottom>
+          I Used AI to help me with the framer motion parts, but the rest is all me.
+        </Typography>
+
+        <Grid container spacing={2}>
+          <Grid size={8}>
+            <Paper elevation={24} style={{padding: "1em", marginTop: "1em", width: "100%", height:"600px"} }>
+              <Grid container spacing={2}>
+                {order.map((num, index) => (
+                  <Grid key={num} size={1.3} >
+                    <motion.div layout transition={{ duration: 0.5, type: "spring" }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}>
+
+                    
+                    <Card 
+                      draggable
+                      onDragStart={() => handleDragStart(index)}
+                      onDragEnter={() => handleDragEnter(index)}
+                      onDragEnd={handleDragEnd}
+                      style={{
+                        height: "150px",
+                        cursor: "grab",
+                        opacity: draggingIndex === index ? 0.5 : 1,
+                        transition: "0.2s",
+                      }}
+                    >
+                      <CardContent style={{ padding: 0 }}>
+                        {cardMap[num] ? (
+                          <img
+                            src={cardMap[num]}
+                            alt={`Card ${num}`}
+                            style={{ width: "100%", display: "block" }}
+                          />
+                        ) : (
+                          <div style={{ width: "100%", height: 150, background: "#eee" }} />
+                        )}
+                      </CardContent>
+                    </Card>
+                    </motion.div>
+                  </Grid>
+                ))}
+              </Grid>
+            </Paper>
+          </Grid>
+          <Grid size={4}>
+            <ButtonGroup orientation="vertical" variant="contained" aria-label="vertical contained button group" fullWidth style={{marginTop: "1em"}}>
+              <Button onClick={shuffleCards}>Shuffle</Button>
+              <Button onClick={bubbleSort}>Bubble Sort</Button>
+              <Button onClick={selectionSort}>Selection Sort</Button>
+              <Button onClick={insertionSort}>Insertion Sort</Button>
+              <Button onClick={mergeSort}>Merge Sort</Button>
+              <Button>Quick Sort</Button>
+              <Button>Heap Sort</Button>
+            </ButtonGroup>
+          </Grid>
+        </Grid>
+
+      </Box>
+
+      
   );
+
+
+
 }

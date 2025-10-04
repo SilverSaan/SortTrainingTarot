@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AppBar } from "@mui/material";
+import { AppBar, Box, Typography } from "@mui/material";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,6 +30,17 @@ export default function RootLayout({
           <div style={{padding: "1em"}}>Tarot Card Sort</div>
         </AppBar>
         {children}
+
+        <Box component="footer" style={{"backgroundColor": "white", "marginTop": "50px"}}>
+
+          <Typography color="red">
+            “It has been said that 80% of what people learn is visual.”– Author: Allen Klein
+          </Typography>
+          <Typography color="purple">
+            Cards from Mage the Ascension Content from RPGDriveThru, under Dark Pack Agreement
+          </Typography>
+                
+        </Box>
       </body>
     </html>
   );

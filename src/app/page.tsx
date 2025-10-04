@@ -14,6 +14,7 @@ export default function Home() {
     const [order, setOrder] = useState<number[]>([]); // track drag order
     const [draggingIndex, setDraggingIndex] = useState<number | null>(null); // To track while dragging
     const [isSorted, setIsSorted] = useState(false);
+    const [isSorting, setIsSorting] = useState(false);
 
     useEffect(() => { //Used Axios because I'm more used to it, fetch would probably be the best 
       axios.get("/api/card")
@@ -71,6 +72,11 @@ export default function Home() {
   }
 
   const bubbleSort = async () => {
+    if (isSorting){
+      return; // Guard to not allow multiple algorithms to run and corrupt cards
+    }
+
+    setIsSorting(true);
     // To exemplify the animation, each step will be delayed by 300ms
     const arr = [...order];
     const n = arr.length;
@@ -111,9 +117,16 @@ export default function Home() {
 
       }
     }
+    setIsSorting(false);
   }
 
   const selectionSort = async () => {
+    if (isSorting){
+      return; // Guard to not allow multiple algorithms to run and corrupt cards
+    }
+
+    setIsSorting(true);
+
     console.log("WOW")
     const arr = [...order]; 
     const n = arr.length; 
@@ -132,9 +145,16 @@ export default function Home() {
       await sleep(100)
     }
 
+    setIsSorting(false);
+
   }
 
   const insertionSort = async () => {
+    if (isSorting){
+      return; // Guard to not allow multiple algorithms to run and corrupt cards
+    }
+    setIsSorting(true);
+
     const arr = [...order]
     const n = arr.length;
     
@@ -152,11 +172,15 @@ export default function Home() {
       await sleep(300)
     }
 
+    setIsSorting(false);
+
   }
 
   
 
   const mergeSort = async () => {
+
+
     const arr = [...order];
     let b: number[] = new Array(arr.length); // Had to allocate this to allow async function to not duplicate
 
@@ -199,12 +223,20 @@ export default function Home() {
       }
     }
 
+    if (isSorting){
+      return; // Guard to not allow multiple algorithms to run and corrupt cards
+    }
+    setIsSorting(true);
     await sort(0, arr.length - 1);
+    setIsSorting(false);
   };
 
   // Another divide and conquer algorithm, doing the steps async (So they use sleep) will be the biggest problem here
   // So gonna do everything in One recursive function
   const quickSort = async () => {
+    if (isSorting){
+      return; // Guard to not allow multiple algorithms to run and corrupt cards
+    }
     const arr = [...order] // Copy order 
     
     async function sort(low:number, high:number) {
@@ -237,12 +269,10 @@ export default function Home() {
       }
     }
 
+    setIsSorting(true);
     sort(0, arr.length - 1)
+    setIsSorting(false);
   }
-
-
-
-
     
   return (
       <Box component="main" sx={{ flexGrow: 1, py: 8 }}>
@@ -251,7 +281,7 @@ export default function Home() {
           - Pedro Silveira 
         </Typography>
         <Typography variant="subtitle1" gutterBottom>
-          I Used AI to help me with the framer motion parts, but the rest is all me.
+          I Used AI to help me with the framer motion parts, but the rest is all me. 
         </Typography>
 
         <Grid container spacing={2}>
@@ -315,8 +345,9 @@ export default function Home() {
           </Grid>
         </Grid>
 
+        
+      
       </Box>
-
       
   );
 

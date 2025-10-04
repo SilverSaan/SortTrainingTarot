@@ -1,20 +1,21 @@
 "use client";
 import Container from "@mui/material/Container";
-import { Title } from "@mui/icons-material";
-import {Card, Box, Button, ButtonGroup, Grid, Paper, Typography, CardContent } from "@mui/material";
+import { Circle, ThumbDown, ThumbUp, Title } from "@mui/icons-material";
+import {Card, Box, Button, ButtonGroup, Grid, Paper, Typography, CardContent, Fab } from "@mui/material";
 import { SetStateAction, use, useEffect, useState } from "react";
 import { getCardMap } from "@/util/util";
 import axios from "axios";
 import { analyseComplexValue, motion } from "framer-motion";
 import { small } from "framer-motion/client";
-
+import CheckIcon from '@mui/icons-material/Check';
 
 export default function Home() {
-    const [cardMap, setCardMap] = useState<Record<number, string>>({});
+    const [cardMap, setCardMap] = useState<Record<number, string>>({}); // {0 : "0 The Fool.jpeg"}
     const [order, setOrder] = useState<number[]>([]); // track drag order
-    const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+    const [draggingIndex, setDraggingIndex] = useState<number | null>(null); // To track while dragging
+    const [isSorted, setIsSorted] = useState(false);
 
-    useEffect(() => {
+    useEffect(() => { //Used Axios because I'm more used to it, fetch would probably be the best 
       axios.get("/api/card")
         .then(res => {
           setCardMap(res.data);
@@ -23,6 +24,14 @@ export default function Home() {
         })
         .catch(err => console.error("Error loading cards:", err));
     }, []);
+
+
+    useEffect(() => {
+      setIsSorted(checkIsSorted());
+ 
+
+    }, [order]); //Everytime order changes call this
+
 
     const handleDragStart = (index: number) => setDraggingIndex(index);
 
@@ -49,6 +58,17 @@ export default function Home() {
 
   const sleep = (ms: number | undefined) => new Promise(resolve => setTimeout(resolve, ms));
 
+  function checkIsSorted(){
+    let arr = [...order]
+    let sorted = true
+    for(let i = 1; i < arr.length; i++){
+      if (arr[i] < arr[i -1]){
+        sorted = false;
+        return sorted;
+      }
+    }
+    return sorted; 
+  }
 
   const bubbleSort = async () => {
     // To exemplify the animation, each step will be delayed by 300ms
@@ -140,7 +160,7 @@ export default function Home() {
     const arr = [...order];
     let b: number[] = new Array(arr.length); // Had to allocate this to allow async function to not duplicate
 
-    async function mergeSortRecursiveStep(low: number, mid: number, high: number) {
+    async function mergeSortNonRecursiveStep(low: number, mid: number, high: number) {
       let l1 = low, l2 = mid + 1, i = low;
 
       // Filling B to allow this to be async.
@@ -173,7 +193,7 @@ export default function Home() {
         await sort(mid + 1, high);
         setOrder([...arr]);
         await sleep(100);
-        await mergeSortRecursiveStep(low, mid, high);
+        await mergeSortNonRecursiveStep(low, mid, high);
         setOrder([...arr]);
         await sleep(100);
       }
@@ -181,6 +201,45 @@ export default function Home() {
 
     await sort(0, arr.length - 1);
   };
+
+  // Another divide and conquer algorithm, doing the steps async (So they use sleep) will be the biggest problem here
+  // So gonna do everything in One recursive function
+  const quickSort = async () => {
+    const arr = [...order] // Copy order 
+    
+    async function sort(low:number, high:number) {
+      if (low < high){
+        let i = low - 1
+        let p = high
+
+        for(let it = low; it < high; it++){
+          if (arr[it] < arr[p]){
+            i++
+
+            let temp = arr[i]
+            arr[i] = arr[it]
+            arr[it] = temp
+            setOrder([...arr]);
+            await sleep(100)
+
+          }   
+        }
+
+        i++
+        let temp = arr[i]
+        arr[i] = arr[p]
+        arr[p] = temp
+        setOrder([...arr]);
+        await sleep(100)
+
+        await sort(low, i - 1)
+        await sort(i + 1, high)
+      }
+    }
+
+    sort(0, arr.length - 1)
+  }
+
 
 
 
@@ -243,9 +302,16 @@ export default function Home() {
               <Button onClick={selectionSort}>Selection Sort</Button>
               <Button onClick={insertionSort}>Insertion Sort</Button>
               <Button onClick={mergeSort}>Merge Sort</Button>
-              <Button>Quick Sort</Button>
+              <Button onClick={quickSort}>Quick Sort</Button>
               <Button>Heap Sort</Button>
             </ButtonGroup>
+
+            <Fab
+              color={isSorted ? "success" : "error"}  // green or red
+              aria-label={isSorted ? "sorted" : "unsorted"}
+            >
+              {isSorted ? <ThumbUp /> : <ThumbDown />}
+            </Fab>
           </Grid>
         </Grid>
 

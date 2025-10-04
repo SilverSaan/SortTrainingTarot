@@ -9,8 +9,6 @@ import { analyseComplexValue, motion } from "framer-motion";
 import { small } from "framer-motion/client";
 
 
-
-
 export default function Home() {
     const [cardMap, setCardMap] = useState<Record<number, string>>({});
     const [order, setOrder] = useState<number[]>([]); // track drag order
@@ -60,9 +58,32 @@ export default function Home() {
       for (let j = 0; j < n - i - 1; j++) { 
         
         if (arr[j] > arr[j + 1]) {
+          // This is simpler to understand than previous code that used the ^ operator
+          // The ^ Operator is the bitwise XOR operator, it can be used to compare equality (x ^ x == 0)
+          /*
+          The previous code used the XOR operator in the following ways: 
+          
+          Replace arr[j] with the bitwise XOR of the two values.
           arr[j] = arr[j] ^ arr[j + 1];
+          After this line: arr[j] === (original arr[j]) ^ (original arr[j+1])
+          
           arr[j + 1] = arr[j] ^ arr[j + 1];
+          So after this line arr[j + 1] is equal to arr[j] because arr[j + 1] = original_arr[j] ^ original_arr[j+1] ^ or original_arr[j+1]
+          original_arr[j+1] ^ or original_arr[j+1] == 0 
+          any number a XOR 00000000 is equal to a 
+
+          The same happens on the other side
           arr[j] = arr[j] ^ arr[j + 1];
+          which is for the original arr
+          arr[j] ^ arr[j + 1] ^ arr[j] ^ arr[j + 1] ^ arr[j + 1]
+          cut the repeated values and then you'll have 
+          arr[j] = original arr[j+1]
+          So arr[j] becomes the original arr[j+1].
+          */
+
+          let temp = arr[j+1]
+          arr[j + 1] = arr[j] 
+          arr[j] = temp
           setOrder([...arr]);  
         }
         await sleep(100);

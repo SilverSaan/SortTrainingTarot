@@ -85,8 +85,9 @@ export default function Home() {
           arr[j + 1] = arr[j] 
           arr[j] = temp
           setOrder([...arr]);  
+          await sleep(100);
+
         }
-        await sleep(100);
 
       }
     }

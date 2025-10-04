@@ -1,13 +1,11 @@
 "use client";
-import Container from "@mui/material/Container";
-import { Circle, ThumbDown, ThumbUp, Title } from "@mui/icons-material";
-import {Card, Box, Button, ButtonGroup, Grid, Paper, Typography, CardContent, Fab } from "@mui/material";
-import { SetStateAction, use, useEffect, useState } from "react";
-import { getCardMap } from "@/util/util";
+import {  ThumbDown, ThumbUp } from "@mui/icons-material";
+import {Card, Box, Button, ButtonGroup, Grid, Paper, Typography, CardContent, Fab, Slider } from "@mui/material";
+import { useEffect, useState } from "react";
+
 import axios from "axios";
 import { analyseComplexValue, motion } from "framer-motion";
-import { small } from "framer-motion/client";
-import CheckIcon from '@mui/icons-material/Check';
+
 
 export default function Home() {
     const [cardMap, setCardMap] = useState<Record<number, string>>({}); // {0 : "0 The Fool.jpeg"}
@@ -15,6 +13,7 @@ export default function Home() {
     const [draggingIndex, setDraggingIndex] = useState<number | null>(null); // To track while dragging
     const [isSorted, setIsSorted] = useState(false);
     const [isSorting, setIsSorting] = useState(false);
+    const [updateTime, setUpdateTime] = useState(100);
 
     useEffect(() => { //Used Axios because I'm more used to it, fetch would probably be the best 
       axios.get("/api/card")
@@ -111,7 +110,7 @@ export default function Home() {
           arr[j + 1] = arr[j] 
           arr[j] = temp
           setOrder([...arr]);  
-          await sleep(100);
+          await sleep(updateTime);
 
         }
 
@@ -142,7 +141,7 @@ export default function Home() {
       arr[i] = arr[smallest]
       arr[smallest] = temp 
       setOrder([...arr])
-      await sleep(100)
+      await sleep(updateTime)
     }
 
     setIsSorting(false);
@@ -169,7 +168,7 @@ export default function Home() {
 
       arr[j+1] = key
       setOrder([...arr])
-      await sleep(300)
+      await sleep(updateTime)
     }
 
     setIsSorting(false);
@@ -213,13 +212,13 @@ export default function Home() {
         const mid = Math.floor((low + high) / 2);
         await sort(low, mid);
         setOrder([...arr]);
-        await sleep(100);
+        await sleep(updateTime);
         await sort(mid + 1, high);
         setOrder([...arr]);
-        await sleep(100);
+        await sleep(updateTime);
         await mergeSortNonRecursiveStep(low, mid, high);
         setOrder([...arr]);
-        await sleep(100);
+        await sleep(updateTime);
       }
     }
 
@@ -252,7 +251,7 @@ export default function Home() {
             arr[i] = arr[it]
             arr[it] = temp
             setOrder([...arr]);
-            await sleep(100)
+            await sleep(updateTime)
 
           }   
         }
@@ -262,7 +261,7 @@ export default function Home() {
         arr[i] = arr[p]
         arr[p] = temp
         setOrder([...arr]);
-        await sleep(100)
+        await sleep(updateTime)
 
         await sort(low, i - 1)
         await sort(i + 1, high)
@@ -336,12 +335,32 @@ export default function Home() {
               <Button>Heap Sort</Button>
             </ButtonGroup>
 
-            <Fab
-              color={isSorted ? "success" : "error"}  // green or red
-              aria-label={isSorted ? "sorted" : "unsorted"}
-            >
-              {isSorted ? <ThumbUp /> : <ThumbDown />}
-            </Fab>
+            <Box display="flex" justifyContent="center" alignItems="center" sx={{ mt: 2 }}>
+              <Fab
+                color={isSorted ? "success" : "error"}
+                aria-label={isSorted ? "sorted" : "unsorted"}
+                size="large"
+              >
+                {isSorted ? <ThumbUp /> : <ThumbDown />}
+              </Fab>
+            </Box>
+
+            <Box sx={{ mt: 4, px: 4 }}>
+              <Typography gutterBottom textAlign="center">
+                Update Interval: {updateTime} ms (Once you start interval will not change, I could use useEffect on those functions but I'm lazy)
+              </Typography>
+              <Slider
+                value={updateTime}
+                onChange={(e, newValue) => setUpdateTime(newValue as number)}
+                step={100}
+                min={100}
+                max={2000}
+                marks={[
+                  { value: 100, label: "Fast" },
+                  { value: 2000, label: "Slow" },
+                ]}
+              />
+            </Box>
           </Grid>
         </Grid>
 

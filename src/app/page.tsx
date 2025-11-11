@@ -1,6 +1,6 @@
 "use client";
 import {  ThumbDown, ThumbUp } from "@mui/icons-material";
-import {Card, Box, Button, ButtonGroup, Grid, Paper, Typography, CardContent, Fab, Slider } from "@mui/material";
+import {Card, Box, Button, ButtonGroup, Grid, Paper, Typography, CardContent, Fab, Slider, Snackbar, Alert } from "@mui/material";
 import { useEffect, useState } from "react";
 
 import axios from "axios";
@@ -14,6 +14,7 @@ export default function Home() {
     const [isSorted, setIsSorted] = useState(false);
     const [isSorting, setIsSorting] = useState(false);
     const [updateTime, setUpdateTime] = useState(100);
+    const [toastOpen, setToastOpen] = useState(false);
 
     useEffect(() => { //Used Axios because I'm more used to it, fetch would probably be the best 
       axios.get("/api/card")
@@ -48,6 +49,12 @@ export default function Home() {
   const handleDragEnd = () => setDraggingIndex(null);
 
   const shuffleCards = () => { 
+    if(isSorting){
+      setToastOpen(true);
+
+      return
+    }
+
     const shuffled = [...order];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -72,7 +79,8 @@ export default function Home() {
 
   const bubbleSort = async () => {
     if (isSorting){
-      return; // Guard to not allow multiple algorithms to run and corrupt cards
+      setToastOpen(true);
+      return;
     }
 
     setIsSorting(true);
@@ -364,9 +372,26 @@ export default function Home() {
           </Grid>
         </Grid>
 
+        <Snackbar
+          open={toastOpen}
+            autoHideDuration={3000} // closes after 3s
+            onClose={() => setToastOpen(false)}
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }} 
+          >
+            <Alert
+              onClose={() => setToastOpen(false)}
+              severity="warning"
+              sx={{ width: "100%" }}
+            >
+              You can’t shuffle or sort while sorting!
+            </Alert>
+        </Snackbar>
+
         
       
       </Box>
+
+      
       
   );
 
